@@ -39,10 +39,10 @@ def load_model_lip()->Sequential:
 
     model.add(TimeDistributed(Flatten()))
 
-    model.add(Bidirectional(GRU(128, kernel_initializer='Orthogonal', return_sequences=True)))
+    model.add(Bidirectional(GRU(128, kernel_initializer='Orthogonal', return_sequences=True, name="gru1")))
     model.add(Dropout(.5))
 
-    model.add(Bidirectional(GRU(128, kernel_initializer='Orthogonal', return_sequences=True)))
+    model.add(Bidirectional(GRU(128, kernel_initializer='Orthogonal', return_sequences=True, name="gru2")))
     model.add(Dropout(.5))
 
     model.add(Dense(char_to_num.vocabulary_size()+1, kernel_initializer='he_normal', activation='softmax'))
@@ -111,6 +111,7 @@ def predict_audio_model(path):
    dropout=0.5)
    model.load_weights("../Models_Dhritiman/Models/05_sound_to_text/202310070653/model.h5")
    spectrogram = WavReader.get_spectrogram("audio.wav", frame_length=configs.frame_length, frame_step=configs.frame_step, fft_length=configs.fft_length)
+   spectrogram = spectrogram[:414,:193]
    padded_spectrogram = np.pad(spectrogram, ((0, configs.max_spectrogram_length - spectrogram.shape[0]),(0,0)), mode="constant", constant_values=0)
    result = model.predict(np.expand_dims(padded_spectrogram, axis=0 ))
    return ctc_decoder(result, configs.vocab)

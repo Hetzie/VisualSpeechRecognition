@@ -2,6 +2,7 @@ import os
 import cv2
 import tensorflow as tf
 from typing import List
+import numpy as np
 
 vocab = [x for x in "abcdefghijklmnopqrstuvwxyz "]
 char_to_num = tf.keras.layers.StringLookup(vocabulary=vocab, oov_token="")
@@ -14,12 +15,16 @@ def load_video(path):
 
     cap = cv2.VideoCapture(path)
     frames = []
-    for _ in range(int(cap.get(cv2.CAP_PROP_FRAME_COUNT))):
+    for _ in range(min(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)),75)):
         ret, frame = cap.read()
         frame = tf.image.rgb_to_grayscale(frame)
         frames.append(frame[190:236,80:220,:])
     cap.release()
-
+    frames = np.array(frames)
+    shape = frames.shape
+    if shape[0] < 75:
+        temp = np.zeros((75-shape[0], 46,140,1))
+        frames = np.concatenate((frames, temp))
     mean = tf.math.reduce_mean(frames)
     std = tf.math.reduce_std(tf.cast(frames, tf.float32))
     return tf.cast((frames - mean), tf.float32) / std
